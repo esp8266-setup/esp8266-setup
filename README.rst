@@ -19,13 +19,19 @@ Just get it via ``pip``:
 
 You probably want to setup a virtual environment before:
 
-    Python 2:
-    
+Python 2
+--------
+
+.. code-block:: bash
+
     virtualenv $HOME/.virtualenvs/esp
     . $HOME/.virtualenvs/esp/bin/activate
 
-    
-    Python 3:
+Python 3
+--------
+
+.. code-block:: bash
+
     python -m venv $HOME/.virtualenvs/esp
     . $HOME/.virtualenvs/esp/bin/activate
 
@@ -36,6 +42,8 @@ Creating projects
 -----------------
 
 To create a project just run the ``start-project`` command like so:
+
+.. code-block:: bash
 
     esp8266-setup start-project <project_name>
 
@@ -76,6 +84,8 @@ files. (This is the reverse of the library definition way above)
 
 To manage a library just change into your project directory and issue one of the
 following commands:
+
+.. code-block:: bash
 
     esp8266-setup add-library git+https://github.com/esp8266-setup/simplehttp.git
     esp8266-setup add-library json
@@ -134,6 +144,8 @@ To adapt a foreign library to this build system you may write a JSON library def
 Some are included in the distribution.
 
 It looks like this:
+
+.. code-block:: json
 
     {
         "name": "<Library name>",
