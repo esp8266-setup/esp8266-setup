@@ -220,7 +220,7 @@ clean:
 
 $(foreach bdir,$(BUILD_DIR),$(eval $(call compile-objects,$(bdir))))
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-depend,$(bdir))))
-include $(DEP)
+-include $(DEP)
 
 export CFLAGS
 export LDFLAGS

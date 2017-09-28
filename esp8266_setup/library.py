@@ -1,7 +1,6 @@
 import os
 import re
 import json
-from datetime import datetime
 
 from esp8266_setup.tools import BASE_DIR, current_user, replace_placeholders
 
@@ -13,7 +12,6 @@ def make_library_makefile(mk, args):
 
     # includes
     m = re.search(r'^INCDIR[ \t]*\+=[ \t]*([^\n]*)$', mk, flags=re.MULTILINE)
-    print(m.group(1))
     includes = set(m.group(1).split(' '))
 
     if args.sdk_dependencies is not None:
@@ -38,7 +36,15 @@ def make_library_makefile(mk, args):
                 includes.add('-I$(SDK_PATH)/include/spiffs')
             elif dep == 'ssl':
                 includes.add('-I$(SDK_PATH)/include/ssl')
+    if args.include is not None:
+        inc = args.include.split(' ')
+        for i in inc:
+            includes.add(i)
     mk = mk[:m.start()] + 'INCDIR      +=' + " ".join(includes) + mk[m.end():]
+
+    if args.cflags is not None:
+        m = re.search(r'^CFLAGS[ \t]*\+=[ \t]*[^\n]*$', mk, flags=re.MULTILINE)
+        mk = mk[:m.start()] + 'CFLAGS      += ' + args.cflags + mk[m.end():]
 
     return mk
 
@@ -55,6 +61,12 @@ def make_library_json(obj, args):
         obj['dependencies'] = [d for d in args.dependencies.split(',') if len(d) > 0]
     if args.sdk_dependencies is not None:
         obj['sdk_dependencies'] = [d for d in args.sdk_dependencies.split(',') if len(d) > 0]
+    if args.cflags is not None:
+        obj['extra_cflags'] = args.cflags
+    if args.ldflags is not None:
+        obj['extra_ldflags'] = args.ldflags
+    if args.include is not None:
+        obj['extra_includes'] = args.include
     return obj
 
 

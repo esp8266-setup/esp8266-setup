@@ -150,6 +150,7 @@ It looks like this:
     {
         "name": "<Library name>",
         "author": "Your name <your@email>",
+        "version": "1.0",
         "license": "SPDX short identifier",
         "url": "<http or git URL>",
         "dependencies": [

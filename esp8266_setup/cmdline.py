@@ -5,7 +5,7 @@ import os
 from esp8266_setup.tools import current_user, BASE_DIR
 from esp8266_setup.library import start_library, modify_library
 from esp8266_setup.project import start_project, modify_settings
-from esp8266_setup.package import add_library, remove_library, update_library
+from esp8266_setup.package import add_library, remove_library, update_library, show_libraries
 from esp8266_setup.toolchain import install_toolchain
 
 __version__ = "1.0"
@@ -42,6 +42,9 @@ def parse():
     parser_start_library.add_argument('--url', default='', help='URL where to get the library source, either git+<GIT URL> or http(s) URL')
     parser_start_library.add_argument('--dependencies', default='', help='Comma separated list of dependencies')
     parser_start_library.add_argument('--sdk-dependencies', default='', help='Comma separated list of sdk dependencies')
+    parser_start_library.add_argument('--cflags', default='', help='CFLAGS to use for compiling')
+    parser_start_library.add_argument('--ldflags', default='', help='LDFLAGS for parent project')
+    parser_start_library.add_argument('--include', default='', help='Extra include paths')
 
 
     # add library to project
@@ -62,6 +65,10 @@ def parse():
         help='Update a library in a project')
     parser_update_library.add_argument('library', help='Library name')
 
+    # show libraries
+    parser_update_library = subparsers.add_parser(
+        'show-libraries',
+        help='Show installed libraries')
 
     # install toolchain
     # parser_toolchain = subparsers.add_parser(
@@ -84,6 +91,9 @@ def parse():
     parser_modify_lib_settings.add_argument('--url', default=None, help='URL where to get the library source, either git+<GIT URL> or http(s) URL')
     parser_modify_lib_settings.add_argument('--dependencies', default=None, help='Comma separated list of dependencies')
     parser_modify_lib_settings.add_argument('--sdk-dependencies', default=None, help='Comma separated list of sdk dependencies')
+    parser_modify_lib_settings.add_argument('--cflags', default='', help='CFLAGS to use for compiling')
+    parser_modify_lib_settings.add_argument('--ldflags', default='', help='LDFLAGS for parent project')
+    parser_modify_lib_settings.add_argument('--include', default='', help='Extra include paths')
 
     # display version
     subparsers.add_parser(

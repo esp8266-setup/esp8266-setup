@@ -34,12 +34,13 @@ BUILD_DIR   ?= build
 # source code to compile
 SRC		    := $(wildcard src/*.c)
 OBJ		    := $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRC))
-INCDIR	    := -I./include 
+INCDIR	    := -I./include  -I./src
 INCDIR      += 
 
 LIB_SDK_INCDIR ?= include include/espressif extra_include
 
 CFLAGS      ?= -Os -Wpointer-arith -Wundef -fno-inline-functions -Werror
+CFLAGS      +=
 CFLAGS      += -Wl,-EL -nostdlib -mlongcalls -mtext-section-literals  -D__ets__ \
                -DICACHE_FLASH -ffunction-sections -fdata-sections -fno-builtin-printf \
                -fno-jump-tables --std=c99
@@ -106,7 +107,9 @@ $(TARGET): $(OBJ)
 	$(vecho) "AR $@"
 	$(Q) $(AR) cru $@ $^
 
-checkdirs: $(BUILD_DIR)
+checkdirs: $(BUILD_DIR) $(BUILD_DIR)/src
+
+$(BUILD_DIR)/src:
 	$(Q) mkdir -p $(BUILD_DIR)/src
 
 $(BUILD_DIR):
@@ -122,11 +125,11 @@ $(BUILD_DIR)/%.o: %.c
 	$(vecho) "CC $<"
 	$(Q) $(CC) $(INCDIR) $(LIB_SDK_INCDIR) $(SDK_INCDIR) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.d: %.c checkdirs
+$(BUILD_DIR)/%.d: %.c $(BUILD_DIR)/src
 	$(vecho) "Depend $<"
 	$(Q) set -e; rm -f $@; \
 	 $(CC) -M $(INCDIR) $(LIB_SDK_INCDIR) $(SDK_INCDIR) $(CPPFLAGS) $< > $@.$$$$; \
 	 sed 's,\(.*\)\.o[ :]*,$(BUILD_DIR)/$(dir $<)\1.o $@: ,g' < $@.$$$$ > $@; \
 	 rm -f $@.$$$$
 
-include $(DEP)
+-include $(DEP)
