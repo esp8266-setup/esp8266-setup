@@ -26,40 +26,10 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+ 
+#ifndef %project%_h_included
+#define %project%_h_included
 
-#include <esp_common.h>
+char *hello_world(const char *name);
 
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-
-#include <c_types.h>
-#include <spi_flash.h>
-
-// This is called by the SDK to fetch the SDK settings sector,
-// we use the default and give it the last five sectors of flash
-uint32 user_rf_cal_sector_set(void) {
-    extern char flashchip;
-    SpiFlashChip *flash = (SpiFlashChip*)(&flashchip + 4);
-    // We know that sector size in 4096
-    //uint32_t sec_num = flash->chip_size / flash->sector_size;
-    uint32_t sec_num = flash->chip_size >> 12;
-    return sec_num - 5;
-}
-
-// Wifi event handler, will be called if we got an IP address in Station mode
-void ICACHE_FLASH_ATTR wifi_event_handler_cb(System_Event_t *event) {
-    static int running = 0;
-
-    if (event->event_id == EVENT_STAMODE_GOT_IP) {
-        // We have an IP address
-        // TODO: run all services that need this address now
-    }
-}
-
-// Entry point that will be called from the SDK, setup everything here...
-void user_init(void) {
-    printf("SDK version: %s\n", system_get_sdk_version());
-    wifi_set_event_handler_cb(wifi_event_handler_cb);
-
-    // TODO: Initialization tasks, probably run a few RTOS tasks?
-}
+#endif /* %project%_h_included */

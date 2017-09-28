@@ -37,6 +37,8 @@ OBJ		    := $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRC))
 INCDIR	    := -I./include 
 INCDIR      += 
 
+LIB_SDK_INCDIR ?= include include/espressif extra_include
+
 CFLAGS      ?= -Os -Wpointer-arith -Wundef -fno-inline-functions -Werror
 CFLAGS      += -Wl,-EL -nostdlib -mlongcalls -mtext-section-literals  -D__ets__ \
                -DICACHE_FLASH -ffunction-sections -fdata-sections -fno-builtin-printf \
@@ -73,16 +75,17 @@ ifeq ($(OS),Linux)
 endif
 
 # select which tools to use as compiler, librarian and linker
-CC ?= $(XTENSA_TOOLS_ROOT)/xtensa-lx106-elf-gcc
-AR ?= $(XTENSA_TOOLS_ROOT)/xtensa-lx106-elf-ar
-LD ?= $(XTENSA_TOOLS_ROOT)/xtensa-lx106-elf-gcc
+CC := $(XTENSA_TOOLS_ROOT)/xtensa-lx106-elf-gcc
+AR := $(XTENSA_TOOLS_ROOT)/xtensa-lx106-elf-ar
+LD := $(XTENSA_TOOLS_ROOT)/xtensa-lx106-elf-gcc
 
 ####
 #### no user configurable options below here
 ####
 
-TARGET := $(addprefix $(BUILD_DIR)/../,$(TARGET))
-DEP    := $(patsubst %.c,$(BUILD_DIR)/%.d,$(SRC))
+TARGET          := $(addprefix $(BUILD_DIR)/../,$(TARGET))
+DEP             := $(patsubst %.c,$(BUILD_DIR)/%.d,$(SRC))
+LIB_SDK_INCDIR  := $(addprefix -I$(SDK_PATH)/,$(LIB_SDK_INCDIR))
 
 V ?= $(VERBOSE)
 ifeq ("$(V)","1")
@@ -117,12 +120,12 @@ clean:
 
 $(BUILD_DIR)/%.o: %.c
 	$(vecho) "CC $<"
-	$(Q) $(CC) $(INCDIR) $(SDK_INCDIR) $(CFLAGS) -c $< -o $@
+	$(Q) $(CC) $(INCDIR) $(LIB_SDK_INCDIR) $(SDK_INCDIR) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.d: %.c checkdirs
 	$(vecho) "Depend $<"
 	$(Q) set -e; rm -f $@; \
-	 $(CC) -M $(INCDIR) $(SDK_INCDIR) $(CPPFLAGS) $< > $@.$$$$; \
+	 $(CC) -M $(INCDIR) $(LIB_SDK_INCDIR) $(SDK_INCDIR) $(CPPFLAGS) $< > $@.$$$$; \
 	 sed 's,\(.*\)\.o[ :]*,$(BUILD_DIR)/$(dir $<)\1.o $@: ,g' < $@.$$$$ > $@; \
 	 rm -f $@.$$$$
 

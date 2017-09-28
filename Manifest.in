@@ -1,0 +1,3 @@
+include makefiles/*.mk
+include skel/*
+include libs/*
