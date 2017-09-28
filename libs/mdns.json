@@ -1,0 +1,41 @@
+{
+    "name": "mdns",
+    "author": "Johannes Schriewer <hallo@dunkelstern.de>",
+    "version": "1.0",
+    "license": "BSD-2-Clause",
+    "url": "git+https://github.com/dunkelstern/mdns-esp8266.git@master",
+    "dependencies": [
+    ],
+    "sdk_dependencies": [
+        "lwip"
+    ],
+    "extra_cflags": "-DMDNS_BROADCAST_ONLY=1 -DDEBUG_LEVEL=ERROR",
+    "extra_ldflags": "",
+    "extra_includes": "",
+    "source": [
+        "platform/debug.h",
+        "platform/platform.h",
+        "platform/platform_network.c",
+        "platform/platform_stream.c",
+        "library/dns.c",
+        "library/dns.h",
+        "library/mdns_network.c",
+        "library/mdns_network.h",
+        "library/mdns_publish.c",
+        "library/mdns_publish.h",
+        "library/mdns_query.c",
+        "library/mdns_query.h",
+        "library/query.c",
+        "library/query.h",
+        "library/server.c",
+        "library/server.h",
+        "library/service.c",
+        "library/stream.c",
+        "library/stream.h",
+        "library/tools.c",
+        "library/tools.h"
+    ],
+    "include": [
+        "include/mdns/mdns.h"
+    ]
+}
