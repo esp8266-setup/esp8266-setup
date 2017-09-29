@@ -105,10 +105,10 @@ FW_FILE_1_ADDR = 0x00000
 ifneq ($(notdir $(LD_SCRIPT)),eagle.app.v6.new.2048.ld)
     # we create two different files for uploading into the flash
     # these are the names and options to generate them
-    ifeq ($(notdir $(LD_SCRIPT)),eagle.app.v6.new.512.ld)
+    ifeq ($(notdir $(LD_SCRIPT)),eagle.app.v6.new.512.app1.ld)
         FW_FILE_2_ADDR = 0x40000
     endif
-    ifeq ($(notdir $(LD_SCRIPT)),eagle.app.v6.new.1024.ld)
+    ifeq ($(notdir $(LD_SCRIPT)),eagle.app.v6.new.1024.app1.ld)
         FW_FILE_2_ADDR = 0x80000
     endif
 endif
@@ -192,8 +192,8 @@ libdirs: $(LIB_SRC_DIRS)
 $(LIB_SRC_DIRS):
 	$(MAKE) -C $@ BUILD_DIR="$(BUILD_BASE)/$@"
 
-$(FW_BASE)/%.bin: $(TARGET_OUT) | $(FW_BASE)
-	$(vecho) "FW $(FW_BASE)/"
+$(FW_BASE)/%.bin: $(TARGET_OUT) $(FW_BASE)
+	$(vecho) "FW $(FW_BASE)/ -> $(FW_FILES)"
 	$(Q) $(ESPTOOL) elf2image --version=2 -o $@ $(TARGET_OUT)
 
 $(TARGET_OUT): $(APP_AR)
