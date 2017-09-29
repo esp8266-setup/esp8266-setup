@@ -1,0 +1,32 @@
+{
+    "name": "simplehttp",
+    "author": "Johannes Schriewer <hallo@dunkelstern.de>",
+    "version": "1.0",
+    "license": "BSD-2-Clause",
+    "url": "git+https://github.com/dunkelstern/simplehttp-esp8266.git@master",
+    "dependencies": [
+    ],
+    "sdk_dependencies": [
+        "lwip",
+        "json"
+    ],
+    "extra_cflags": "-DDEBUG_LEVEL=ERROR",
+    "extra_ldflags": "",
+    "extra_includes": "",
+    "source": [
+        "library/parser.c",
+        "library/response.c",
+        "library/router.c",
+        "library/server.c",
+        "library/urldecode.c",
+        "library/urlencode.c",
+        "library/debug.h",
+        "library/parser.h",
+        "library/response.h",
+        "library/router.h",
+        "library/urlcoder.h"
+    ],
+    "include": [
+        "include/simplehttp/http.h"
+    ]
+}
