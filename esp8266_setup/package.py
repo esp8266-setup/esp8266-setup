@@ -217,7 +217,14 @@ class Library(object):
             s = os.path.join('.libs', self.name, inc)
             if inc.startswith('include/') or inc.startswith('include\\'):
                 inc = inc[8:]
-            os.makedirs(os.path.join('lib', self.name, 'include', os.path.dirname(inc)))
+            try:
+                os.makedirs(os.path.join('lib', self.name, 'include', os.path.dirname(inc)))
+            except OSError as e:
+                if e.errno == 17:
+                    pass
+                else:
+                    print('ERROR: Could not create directory')
+                    exit(1)
             d = os.path.join('lib', self.name, 'include', inc)
             os.link(s, d)
 
