@@ -11,18 +11,21 @@ class Library(object):
 
     def __init__(self, name):
         self.library_info = None
+        self.definition_location = None
         ok = self.parse_url(name)
 
         if not ok:
             if name.endswith('.json'):
                 # if it ends in json, assume local file
                 print('Importing local library definition for {}'.format(name))
+                self.definition_location = os.path.dirname(name)
                 self.load_definition(name)
             else:
                 # try to find in repo that comes with the distribution
                 lib_file = os.path.join(BASE_DIR, 'libs', name + '.json')
                 if os.path.isfile(lib_file):
                     print('Using distributed library definition for {}'.format(name))
+                    self.definition_location = os.path.dirname(lib_file)
                     self.load_definition(lib_file)
                 else:
                     raise AttributeError('Unable to find library with name {}'.format(name))
@@ -39,7 +42,7 @@ class Library(object):
         
     def _update(self):
         if self.url.startswith('git+'):
-            os.system('cd .libs/{}; git pull origin'.format(self.name))
+            os.system('cd .libs/{}; git reset --hard ; git pull origin'.format(self.name))
         elif self.url.startswith('http://') or self.url.startswith('https://'):
             # TODO: ask server if a newer version is available
             pass
@@ -65,6 +68,10 @@ class Library(object):
     @property
     def converted(self):
         return False if os.path.isfile(os.path.join('.libs', self.name, 'library.json')) else True
+
+    @property
+    def conversion_script(self):
+        return os.path.abspath(os.path.join(self.definition_location, self.run_script))
 
     def git_checkout(self, url):
         try:
@@ -142,6 +149,11 @@ class Library(object):
         return True
 
     def convert_library(self):
+        # run conversion script
+        cmd = 'cd .libs/{}; chmod a+x {}; {}'.format(self.name, self.conversion_script, self.conversion_script)
+        os.system(cmd)
+
+        # create new library
         cmd = 'cd lib; esp8266-setup start-library --author "{author}" --license "{license}" --url "{url}"'.format(
             author=self.author,
             license=self.license,
