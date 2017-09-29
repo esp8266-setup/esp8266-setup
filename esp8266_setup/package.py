@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import json
 import shutil
@@ -66,13 +68,13 @@ class Library(object):
 
     def git_checkout(self, url):
         try:
-            url, branch = url.rsplit('@', maxsplit=1)
+            url, branch = url.rsplit('@', 1)
         except ValueError:
             print('ERROR: Please supply a branch, tag or commit ID (append @master if unsure)!')
             exit(1)
 
         if getattr(self, 'name', None) is None:
-            _, name = url.rsplit('/', maxsplit=1)
+            _, name = url.rsplit('/', 1)
             if name.endswith('.git'):
                 name = name[:-4]
         else:
@@ -89,7 +91,7 @@ class Library(object):
             exit(1)
 
     def download(self, url):
-        _, name = url.rsplit('/', maxsplit=1)
+        _, name = url.rsplit('/', 1)
         name, ext = os.path.splitext(name)
 
         # TODO: download
@@ -140,22 +142,26 @@ class Library(object):
         return True
 
     def convert_library(self):
-        cmd = '''
-            cd lib; esp8266-setup start-library {name} --author "{author}" --license "{license}" \
-             --url "{url}" --dependencies "{deps}" --sdk-dependencies "{sdk_deps}" \
-             --cflags "{cflags}" --ldflags "{ldflags}" --include "{includes}" \
-        '''.format(
-            name=self.name,
+        cmd = 'cd lib; esp8266-setup start-library --author "{author}" --license "{license}" --url "{url}"'.format(
             author=self.author,
             license=self.license,
-            url=self.url,
-            deps=",".join(self.dependencies),
-            sdk_deps=",".join(self.sdk_dependencies),
-            cflags=self.extra_cflags,
-            ldflags=self.extra_ldflags,
-            includes=self.extra_includes
+            url=self.url
         )
 
+        if len(self.dependencies) > 0:
+            cmd += ' --dependencies "{}"'.format(",".join(self.dependencies))
+        if len(self.sdk_dependencies) > 0:
+            cmd += ' --sdk-dependencies "{}"'.format(",".join(self.sdk_dependencies))
+        if self.extra_cflags:
+            cmd += ' --cflags "{} "'.format(self.extra_cflags)
+        if self.extra_ldflags:
+            cmd += ' --ldflags "{} "'.format(self.extra_ldflags)
+        if self.extra_includes:
+            cmd += ' --include "{} "'.format(self.extra_includes)
+
+        cmd += ' ' + self.name
+
+        print(cmd)
         os.system(cmd)
 
         # remove the default crap
