@@ -71,7 +71,10 @@ class Library(object):
 
     @property
     def conversion_script(self):
-        return os.path.abspath(os.path.join(self.definition_location, self.run_script))
+        try:
+            return os.path.abspath(os.path.join(self.definition_location, self.run_script))
+        except KeyError:
+            return None
 
     def git_checkout(self, url):
         try:
@@ -150,8 +153,9 @@ class Library(object):
 
     def convert_library(self):
         # run conversion script
-        cmd = 'cd .libs/{}; chmod a+x {}; {}'.format(self.name, self.conversion_script, self.conversion_script)
-        os.system(cmd)
+        if self.conversion_script:
+            cmd = 'cd .libs/{}; chmod a+x {}; {}'.format(self.name, self.conversion_script, self.conversion_script)
+            os.system(cmd)
 
         version = '1.0.0'
         if self.source_type == 'git':
