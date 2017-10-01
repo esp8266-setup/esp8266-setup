@@ -65,59 +65,41 @@ endif
 # Output directors to store intermediate compiled files
 # relative to the project directory
 BUILD_BASE   = build
-FW_BASE	     = firmware
-
-# name for the target project
-TARGET       = user
 
 # source code to compile
 SRC_DIR	     = src
 
 # path to libraries to compile from source
 SRC_LIBDIR   = lib
-SRC_LIBS     = 
+SRC_LIBS     =
 
 # SDK libraries to link
-LIBS         = minic gcc hal pp phy net80211 lwip wpa main crypto freertos
+LIBS         = gcc hal pp phy net80211 lwip wpa main crypto freertos 
 LIBS        += 
 
 # compiler flags using during compilation of source files
 CFLAGS      ?= -Os -Wpointer-arith -Wundef -fno-inline-functions -Werror
 CFLAGS      += -Wl,-EL -nostdlib -mlongcalls -mtext-section-literals  -D__ets__ \
                -DICACHE_FLASH -ffunction-sections -fdata-sections -fno-builtin-printf \
-               -fno-jump-tables --std=c99
+               -fno-jump-tables --std=c99 \
+               -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-math-errno
 
 
 # linker flags used to generate the main object file
 LDFLAGS     += -Wl,--gc-sections -nostdlib -Wl,--no-check-sections -u call_user_start -Wl,-static -Wl,-O -Wl,-s
 
-# linker script used for the above linker step
-LD_SCRIPT   = eagle.app.v6.new.2048.ld
+# FLASH size
+FLASH_SIZE   = 1024
 
 # various paths from the SDK used in this project
 SDK_LIBDIR  = lib
 SDK_LDDIR   = ld
 SDK_INCDIR  = include include/json include/espressif extra_include include/lwip include/lwip/ipv4 include/lwip/ipv6
 
-# load address for first firmware image
-FW_FILE_1_ADDR = 0x00000
-
-ifneq ($(notdir $(LD_SCRIPT)),eagle.app.v6.new.2048.ld)
-    # we create two different files for uploading into the flash
-    # these are the names and options to generate them
-    ifeq ($(notdir $(LD_SCRIPT)),eagle.app.v6.new.512.app1.ld)
-        FW_FILE_2_ADDR = 0x40000
-    endif
-    ifeq ($(notdir $(LD_SCRIPT)),eagle.app.v6.new.1024.app1.ld)
-        FW_FILE_2_ADDR = 0x80000
-    endif
-endif
-
 # select which tools to use as compiler, librarian and linker
 CC := $(XTENSA_TOOLS_ROOT)/xtensa-lx106-elf-gcc
 AR := $(XTENSA_TOOLS_ROOT)/xtensa-lx106-elf-ar
 LD := $(XTENSA_TOOLS_ROOT)/xtensa-lx106-elf-gcc
-
 
 
 ####
@@ -136,10 +118,45 @@ SRC         := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c))
 OBJ         := $(patsubst %.c,$(BUILD_BASE)/%.o,$(SRC))
 DEP         := $(patsubst %.c,$(BUILD_BASE)/%.d,$(SRC))
 LIBS        := $(addprefix -l,$(LIBS))
-APP_AR      := $(addprefix $(BUILD_BASE)/lib,$(TARGET).a)
-TARGET_OUT  := $(addprefix $(BUILD_BASE)/,$(TARGET).out)
+APP_AR      := $(addprefix $(BUILD_BASE)/lib,user.a)
 
-LD_SCRIPT   := $(addprefix -T$(SDK_PATH)/$(SDK_LDDIR)/,$(LD_SCRIPT))
+ifeq ($(FLASH_SIZE),512)
+LD_SCRIPTS   := eagle.app.v6.ld
+FW_OFFSET    := 0x41000
+RFCAL_OFFSET := 0x7c000
+endif
+
+ifeq ($(FLASH_SIZE),1024)
+LD_SCRIPTS   := eagle.app.v6.new.1024.app1.ld eagle.app.v6.new.1024.app2.ld
+FW_OFFSET    := 0x81000
+RFCAL_OFFSET := 0xfc000
+endif
+
+ifeq ($(FLASH_SIZE),2048)
+LD_SCRIPTS   := eagle.app.v6.new.2048.ld
+FW_OFFSET    := 0x101000
+RFCAL_OFFSET := 0x1fc000
+endif
+
+ifeq ($(FLASH_SIZE),4096)
+LD_SCRIPTS   := eagle.app.v6.new.2048.ld
+FW_OFFSET    := 0x101000
+RFCAL_OFFSET := 0x3fc000
+endif
+
+
+ifeq ($(LD_SCRIPTS),eagle.app.v6.ld)
+TARGET1 := $(addprefix $(BUILD_BASE)/,user.elf)
+else
+	ifeq ($(LD_SCRIPTS),eagle.app.v6.new.2048.ld) 
+        TARGET1 := $(addprefix $(BUILD_BASE)/,user.app1.elf)
+    else
+        TARGET1 := $(addprefix $(BUILD_BASE)/,user.app1.elf)
+        TARGET2 := $(addprefix $(BUILD_BASE)/,user.app2.elf)
+	endif
+endif
+
+#LD_SCRIPTS  := $(addprefix -T$(SDK_PATH)/$(SDK_LDDIR)/,$(LD_SCRIPTS))
 INCDIR      := $(addprefix -I,$(SRC_DIR))
 
 LIB_SRC_DIRS := $(addprefix $(SRC_LIBDIR)/,$(SRC_LIBS))
@@ -150,11 +167,22 @@ SRC_LD_LIBS  := -L$(BUILD_BASE)/$(SRC_LIBDIR) $(addprefix -l,$(SRC_LIBS))
 # one firmware image as both firmware partitions will be memory mapped to the
 # complete address space. If we have less than that (ESP01 Modules) we
 # generate two files with different load addresses
-FW_FILE_1 := $(addprefix $(FW_BASE)/,$(FW_FILE_1_ADDR).bin)
-ifneq ($(notdir $(LD_SCRIPT)),eagle.app.v6.new.2048.ld)
-    FW_FILE_2 := $(addprefix $(FW_BASE)/,$(FW_FILE_2_ADDR).bin)
+FW_FILE := $(addprefix firmware/,$(FW_FILE_ADDR).bin)
+
+# if we're using the old non-bootloader script, we need to generate a v1 build
+ifeq ($(LD_SCRIPTS),eagle.app.v6.ld)
+    ELF2IMAGE_VERSION := 1
+    ESPTOOL_EXT       := -
+    WRITE_FLASH       := 0x00000 firmware/user-0x00000.bin 0x20000 firmware/user-0x20000.bin $(RFCAL_OFFSET) $(SDK_PATH)/bin/esp_init_data_default.bin
+else
+    ELF2IMAGE_VERSION := 2
+    ESPTOOL_EXT       := .bin
+	ifeq ($(LD_SCRIPTS),eagle.app.v6.new.2048.ld)
+    	WRITE_FLASH       := 0x00000 $(SDK_PATH)/bin/boot_v1.7.bin 0x01000 firmware/user.app1.bin $(FW_OFFSET) firmware/user.app1.bin $(RFCAL_OFFSET) $(SDK_PATH)/bin/esp_init_data_default.bin
+	else
+    	WRITE_FLASH       := 0x00000 $(SDK_PATH)/bin/boot_v1.7.bin 0x01000 firmware/user.app1.bin $(FW_OFFSET) firmware/user.app2.bin $(RFCAL_OFFSET) $(SDK_PATH)/bin/esp_init_data_default.bin
+    endif
 endif
-FW_FILES := $(FW_FILE_1) $(FW_FILE_2)
 
 # Verbose mode
 V ?= $(VERBOSE)
@@ -185,42 +213,48 @@ endef
 
 .PHONY: all checkdirs flash clean libdirs $(LIB_SRC_DIRS)
 
-all: checkdirs libdirs $(TARGET_OUT) $(FW_FILES)
+all: checkdirs libdirs $(TARGET1) $(TARGET2)
 
 libdirs: $(LIB_SRC_DIRS) 
 
 $(LIB_SRC_DIRS):
 	$(MAKE) -C $@ BUILD_DIR="$(BUILD_BASE)/$@"
 
-$(FW_BASE)/%.bin: $(TARGET_OUT) $(FW_BASE)
-	$(vecho) "FW $(FW_BASE)/ -> $(FW_FILES)"
-	$(Q) $(ESPTOOL) elf2image --version=2 -o $@ $(TARGET_OUT)
-
-$(TARGET_OUT): $(APP_AR)
+$(TARGET1): $(APP_AR)
 	$(vecho) "LD $@"
-	$(Q) $(LD) -L$(SDK_LIBDIR) $(LD_SCRIPT) $(LDFLAGS) -Wl,--start-group $(LIBS) $(SRC_LD_LIBS) $(APP_AR) -Wl,--end-group -o $@
+	$(Q) if [ $(FLASH_SIZE) -eq 512 ] ; then \
+		echo "ATTENTION: This firmware will not be updateable over the air," ; \
+		echo "           you'll need at least 1MB of flash memory for that." ; \
+	fi
+	$(Q) $(LD) -L$(SDK_LIBDIR) -T$(SDK_PATH)/$(SDK_LDDIR)/$(word 1, $(LD_SCRIPTS)) $(LDFLAGS) -Wl,--start-group $(LIBS) $(SRC_LD_LIBS) $< -Wl,--end-group -o $@
+	$(Q) $(ESPTOOL) elf2image --version=$(ELF2IMAGE_VERSION) -o firmware/$(patsubst %.elf,%$(ESPTOOL_EXT),$(notdir $@)) $@
+
+$(TARGET2): $(APP_AR)
+	$(vecho) "LD $@"
+	$(Q) $(LD) -L$(SDK_LIBDIR) -T$(SDK_PATH)/$(SDK_LDDIR)/$(word 2, $(LD_SCRIPTS)) $(LDFLAGS) -Wl,--start-group $(LIBS) $(SRC_LD_LIBS) $< -Wl,--end-group -o $@
+	$(Q) $(ESPTOOL) elf2image --version=$(ELF2IMAGE_VERSION) -o firmware/$(patsubst %.elf,%$(ESPTOOL_EXT),$(notdir $@)) $@
 
 $(APP_AR): $(OBJ)
 	$(vecho) "AR $@"
 	$(Q) $(AR) cru $@ $^
 
-checkdirs: $(BUILD_DIR) $(FW_BASE)
+checkdirs: $(BUILD_DIR) firmware
 
 $(BUILD_DIR):
 	$(Q) mkdir -p $@
 
-$(FW_BASE):
+firmware:
 	$(Q) mkdir -p $@
 
-flash: $(FW_FILES)
-	$(ESPTOOL) --port $(ESPPORT) write_flash $(FW_FILE_1_ADDR) $(FW_FILE_1) $(FW_FILE_2_ADDR) $(FW_FILE_2)
+flash: $(TARGET1) $(TARGET2)
+	$(ESPTOOL) --port $(SERIALPORT) write_flash $(WRITE_FLASH)
 
 clean:
-	$(Q) rm -rf $(FW_BASE) $(BUILD_BASE)
+	$(Q) rm -rf firmware/ $(BUILD_BASE)
 
 $(foreach bdir,$(BUILD_DIR),$(eval $(call compile-objects,$(bdir))))
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-depend,$(bdir))))
--include $(DEP)
+include $(DEP)
 
 export CFLAGS
 export LDFLAGS

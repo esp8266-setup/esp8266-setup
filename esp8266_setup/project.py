@@ -13,19 +13,9 @@ def make_project_makefile(mk, args):
         mk = mk[:m.start()] + 'LIBS        += ' + libs + mk[m.end():]
 
     # Flash layout
-    if args.flash_layout is not None:
-        if args.flash_layout == '4m':
-            ld_script = 'eagle.app.v6.new.512.app1.ld'
-        elif args.flash_layout == '8m':
-            ld_script = 'eagle.app.v6.new.1024.app1.ld'
-        elif args.flash_layout == '16m' or args.flash_layout == '32m':
-            ld_script = 'eagle.app.v6.new.2048.ld'
-        else:
-            ld_script = 'eagle.app.v6.new.512.app1.ld'
-            print('ERROR: Unknown flash layout, defaulting to 4m')
-        
-        m = re.search(r'^LD_SCRIPT[ \t]*=[ \t]*[^\n]*$', mk, flags=re.MULTILINE)
-        mk = mk[:m.start()] + 'LD_SCRIPT   = ' + ld_script + mk[m.end():]
+    if args.flash_size is not None:        
+        m = re.search(r'^FLASH_SIZE[ \t]*=[ \t]*[^\n]*$', mk, flags=re.MULTILINE)
+        mk = mk[:m.start()] + 'FLASH_SIZE   = ' + str(args.flash_size) + mk[m.end():]
 
     return mk
 

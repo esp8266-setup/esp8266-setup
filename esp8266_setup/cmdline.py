@@ -29,7 +29,7 @@ def parse():
         'start-project',
         help='Start a new project')
     parser_project.add_argument('name', help='Project name')
-    parser_project.add_argument('--flash-layout', choices=['4m', '8m', '16m', '32m'], default='4m', help='Flash size')
+    parser_project.add_argument('--flash-size', choices=['512', '1024', '2048', '4096'], default='4096', help='Flash size (512 KB can not do OTA updates!)')
     parser_project.add_argument('--sdk-libs', default='', help='Link with these libs from the SDK')
 
     # create library templates
@@ -81,7 +81,7 @@ def parse():
     parser_modify_settings = subparsers.add_parser(
         'modify-settings',
         help='Modify settings of an existing project')
-    parser_modify_settings.add_argument('--flash-layout', choices=['4m', '8m', '16m', '32m'], default=None, help='Flash size')
+    parser_modify_settings.add_argument('--flash-size', choices=['512', '1024', '2048', '4096'], default=None, help='Flash size')
     parser_modify_settings.add_argument('--sdk-libs', default=None, help='Link with these libs from the SDK')
 
     parser_modify_lib_settings = subparsers.add_parser(
