@@ -90,7 +90,7 @@ class Library(object):
         os.system('cd .libs; git clone {} {}'.format(url, name))
         os.system('cd .libs/{}; git checkout {}'.format(name, branch))
 
-        definition_file = os.path.join('lib', name, 'library.json')
+        definition_file = os.path.join('.libs', name, 'library.json')
         if os.path.isfile(definition_file):
             self.load_definition(definition_file)
         elif self.library_info is None:
@@ -232,6 +232,8 @@ class Library(object):
         return os.path.isdir(os.path.join('.libs', self.library_info['name']))
 
     def __getattr__(self, attribute):
+        if self.library_info is None:
+            raise AttributeError('Not initialized')
         return self.library_info[attribute]
 
 
