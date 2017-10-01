@@ -45,6 +45,7 @@ def parse():
     parser_start_library.add_argument('--cflags', default='', help='CFLAGS to use for compiling')
     parser_start_library.add_argument('--ldflags', default='', help='LDFLAGS for parent project')
     parser_start_library.add_argument('--include', default='', help='Extra include paths')
+    parser_start_library.add_argument('--version', default='1.0.0', help='Version')
 
 
     # add library to project
@@ -91,9 +92,10 @@ def parse():
     parser_modify_lib_settings.add_argument('--url', default=None, help='URL where to get the library source, either git+<GIT URL> or http(s) URL')
     parser_modify_lib_settings.add_argument('--dependencies', default=None, help='Comma separated list of dependencies')
     parser_modify_lib_settings.add_argument('--sdk-dependencies', default=None, help='Comma separated list of sdk dependencies')
-    parser_modify_lib_settings.add_argument('--cflags', default='', help='CFLAGS to use for compiling')
-    parser_modify_lib_settings.add_argument('--ldflags', default='', help='LDFLAGS for parent project')
-    parser_modify_lib_settings.add_argument('--include', default='', help='Extra include paths')
+    parser_modify_lib_settings.add_argument('--cflags', default=None, help='CFLAGS to use for compiling')
+    parser_modify_lib_settings.add_argument('--ldflags', default=None, help='LDFLAGS for parent project')
+    parser_modify_lib_settings.add_argument('--include', default=None, help='Extra include paths')
+    parser_modify_lib_settings.add_argument('--version', default=None, help='Version')
 
     # display version
     subparsers.add_parser(

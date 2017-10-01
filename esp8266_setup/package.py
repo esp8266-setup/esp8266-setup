@@ -153,11 +153,16 @@ class Library(object):
         cmd = 'cd .libs/{}; chmod a+x {}; {}'.format(self.name, self.conversion_script, self.conversion_script)
         os.system(cmd)
 
+        version = '1.0.0'
+        if self.source_type == 'git':
+            version = 'git'
+        
         # create new library
-        cmd = 'cd lib; esp8266-setup start-library --author "{author}" --license "{license}" --url "{url}"'.format(
+        cmd = 'cd lib; esp8266-setup start-library --author "{author}" --license "{license}" --url "{url}" --version "{ver}"'.format(
             author=self.author,
             license=self.license,
-            url=self.url
+            url=self.url,
+            ver=version
         )
 
         if len(self.dependencies) > 0:
@@ -334,4 +339,4 @@ def show_libraries(args):
         typ = 'native'
         if lib.converted:
             typ = 'imported'
-        print('{} -> v{} ({}, {})'.format(lib.name, lib.version, typ, lib.source_type))
+        print('{} -> {} ({}, {})'.format(lib.name, lib.version, typ, lib.source_type))

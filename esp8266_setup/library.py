@@ -69,6 +69,8 @@ def make_library_json(obj, args):
         obj['extra_ldflags'] = args.ldflags
     if args.include is not None:
         obj['extra_includes'] = args.include
+    if args.version is not None:
+        obj['version'] = args.version
     return obj
 
 
