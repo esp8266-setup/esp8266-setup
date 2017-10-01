@@ -26,6 +26,7 @@ def start_project(args):
         exit(1)
     os.mkdir(args.name)
     os.mkdir(os.path.join(args.name, 'lib'))
+    os.mkdir(os.path.join(args.name, '.libs'))
     os.mkdir(os.path.join(args.name, 'src'))
     with open(os.path.join(args.name, 'Makefile'), 'w') as fpo:
         with open(os.path.join(BASE_DIR, "makefiles", "project.mk"), 'r') as fpi:
@@ -40,6 +41,8 @@ def start_project(args):
     with open(os.path.join(args.name, 'LICENSE.txt'), 'w') as fpo:
         with open(os.path.join(BASE_DIR, "skel", "BSD.txt"), 'r') as fpi:
             fpo.write(replace_placeholders(fpi.read()))
+    cmd = 'cd {} ; esp8266-setup add-library git+https://github.com/esp8266-setup/minic.git@master'.format(args.name)
+    os.system(cmd)
 
 def modify_settings(args):
     if not os.path.exists('Makefile'):
