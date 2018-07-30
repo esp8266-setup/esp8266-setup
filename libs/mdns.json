@@ -3,7 +3,7 @@
     "author": "Johannes Schriewer <hallo@dunkelstern.de>",
     "version": "1.0",
     "license": "BSD-2-Clause",
-    "url": "git+https://github.com/dunkelstern/mdns-esp8266.git@master",
+    "url": "git+https://github.com/esp8266-setup/mdns-esp8266.git@master",
     "dependencies": [
     ],
     "sdk_dependencies": [
